@@ -20,7 +20,7 @@
 // GRAPHICS INCLUDE
 #ifndef DEFINED_G
 #define DEFINED_G
-#include "../../../../Graphics/release/0.1.3/graphics.hpp"
+#include "../../../Graphics/release/0.1.3/graphics.hpp"
 #endif
 
 
