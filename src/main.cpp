@@ -37,7 +37,7 @@ int main() {
             };
 
             // draw line
-            line("ray").from({-12.0, 0.0}).to({100.0, 0.0}).thickness(0.02f).radius(0.01f).draw();
+            line("ray").from({-12.0, 0.0}).to({12.0, 0.0}).thickness(0.02f).radius(0.01f).draw();
 
             // update line to follow cursor
             on_mouse_move([](vec2 position) {
@@ -49,10 +49,15 @@ int main() {
                 vec2 direction = glm::normalize(position - ray_origin);
 
                 // initialise variables
-                string circle_id;
                 vec2 current_position = ray_origin;
                 float distance;
                 float closest_distance = 1000000.0;
+
+                // booleans for different ray marching methods
+                bool sphere_tracing = true;
+                float step_size = 0.1f;
+                bool enhanced = false;
+                float relaxation_factor = 1.6f;
 
                 // march along ray
                 for (int i = 1; i < 64; i++)
@@ -74,8 +79,14 @@ int main() {
                         closest_distance = distance < closest_distance ? distance : closest_distance;
                     }
 
+                    // if closest distance is negative = inside a shape AND we are using fixed step size ray marching
+                    // halve step size
+                    if (closest_distance < 0 && !sphere_tracing) step_size /= 2.0f;
+
                     // take step along ray of size closest distance
-                    current_position += direction * closest_distance;
+                    // if not using sphere tracing, use fixed step size ray marching approach
+                    // if enhanced flag set in addition to using sphere tracing, use relaxation factor
+                    current_position += direction * (sphere_tracing ? closest_distance : step_size) * (sphere_tracing && enhanced ? relaxation_factor : 1.0f);
                 }
             });
         });
