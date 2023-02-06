@@ -1,0 +1,435 @@
+// VERSION
+#version 450
+
+
+// DATA
+struct instance
+{
+    vec2 position;
+    float scale;
+    float rotation;
+    uint data_one;
+    uint data_two;
+};
+struct primitive
+{
+    vec2 position;
+    vec2 dimensions;
+    float radius;
+    float thickness;
+    uint x_parameter;
+    uint y_parameter;
+    float rotation;
+    uint colour;
+};
+struct bounding_interval
+{
+    uint link;
+    uint target;
+    float coordinate;
+};
+
+
+// IO
+layout(local_size_x = 16, local_size_y = 16) in;
+layout(push_constant) uniform constants
+{
+	uvec2 window_size;
+    vec2 scene_lower_bound;
+    vec2 scene_upper_bound;
+    vec2 camera_position;
+    uint primitive_count;
+    float camera_zoom;
+};
+layout(set = 0, binding = 0) buffer _instances { instance instances[]; };
+layout(set = 0, binding = 1) buffer _primitives { primitive primitives[]; };
+layout(set = 0, binding = 2) buffer _blbihs { bounding_interval blbihs[]; };
+layout(set = 0, binding = 3) buffer _tlbih { bounding_interval tlbih[]; };
+layout(set = 1, binding = 0, rgba8_snorm) uniform writeonly image2D output_image;
+
+
+// CAMERA
+vec2 transform_point_for_camera (vec2 point)
+{
+    return (point - camera_position * camera_zoom) / camera_zoom;
+}
+
+
+// SCENE
+bool point_is_within_scene (vec2 point)
+{
+    return point.x > scene_lower_bound.x && point.x < scene_upper_bound.x && point.y > scene_lower_bound.y && point.y < scene_upper_bound.y;
+}
+
+
+// TLBIH
+bool point_is_left_in_tlbi (vec2 point, uint index)
+{
+    return point[ (tlbih[index].link & 0x40000000) >> 30 ] < tlbih[index].coordinate;
+}
+
+bool point_is_center_in_tlbi (vec2 point, uint index)
+{
+    return point[ (tlbih[index].link & 0x40000000) >> 30 ] == tlbih[index].coordinate;
+}
+
+bool current_tlbi_is_right (uint index)
+{
+    return bool(tlbih[index].link & 0x20000000);
+}
+
+bool point_intersects_tlbi (vec2 point, uint index)
+{
+    return ((point_is_left_in_tlbi(point, index) || point_is_center_in_tlbi(point, index)) && !current_tlbi_is_right(index)) || ((!point_is_left_in_tlbi(point, index) || point_is_center_in_tlbi(point, index)) && current_tlbi_is_right(index));
+}
+
+bool current_tlbi_terminates (uint index)
+{
+    return bool(tlbih[index].link & 0x10000000);
+}
+
+uint current_tlbi_miss_link (uint index)
+{
+    return tlbih[index].link & 0x0FFFFFFF;
+}
+
+uint current_tlbi_target (uint index)
+{
+    return tlbih[index].target;
+}
+
+bool current_tlbi_is_leaf (uint index)
+{
+    return bool(tlbih[index].link & 0x80000000);
+}
+
+
+// INSTANCE
+uint get_instance_object_index (uint index)
+{
+    return (instances[index].data_one & 0xFFFF0000) >> 16;
+}
+
+uint get_instance_depth (uint index)
+{
+    return ((instances[index].data_one & 0x0000FFFF) << 8) + ((instances[index].data_two & 0xFF000000) >> 24);
+}
+
+uint get_instance_blbi_start (uint index)
+{
+    return instances[index].data_two & 0x00FFFFFF;
+}
+
+vec2 get_instance_position (uint index)
+{
+    return instances[index].position;
+}
+
+float get_instance_rotation (uint index)
+{
+    return instances[index].rotation;
+}
+
+float get_instance_scale (uint index)
+{
+    return instances[index].scale;
+}
+
+vec2 translate_point_for_instance (uint index, vec2 point)
+{
+    return point - get_instance_position(index);
+}
+
+vec2 rotate_point_for_instance (uint index, vec2 point)
+{
+    return mat2x2( cos( get_instance_rotation(index) ), -1 * sin( get_instance_rotation(index) ), sin( get_instance_rotation(index) ), cos( get_instance_rotation(index) ) ) * point;
+}
+
+vec2 scale_point_for_instance (uint index, vec2 point)
+{
+    return point / get_instance_scale(index);
+}
+
+
+// BLBIH
+bool point_is_left_in_blbi (vec2 point, uint index)
+{
+    return point[ (blbihs[index].link & 0x40000000) >> 30 ] < blbihs[index].coordinate;
+}
+
+bool point_is_center_in_blbi (vec2 point, uint index)
+{
+    return point[ (blbihs[index].link & 0x40000000) >> 30 ] == blbihs[index].coordinate;
+}
+
+bool current_blbi_is_right (uint index)
+{
+    return bool(blbihs[index].link & 0x20000000);
+}
+
+bool point_intersects_blbi (vec2 point, uint index)
+{
+    return ((point_is_left_in_blbi(point, index) || point_is_center_in_blbi(point, index)) && !current_blbi_is_right(index)) || ((!point_is_left_in_blbi(point, index) || point_is_center_in_blbi(point, index)) && current_blbi_is_right(index));
+}
+
+bool current_blbi_terminates (uint index)
+{
+    return bool(blbihs[index].link & 0x10000000);
+}
+
+uint current_blbi_miss_link (uint index)
+{
+    return blbihs[index].link & 0x0FFFFFFF;
+}
+
+uint current_blbi_target (uint index)
+{
+    return blbihs[index].target; 
+}
+
+bool current_blbi_is_leaf (uint index)
+{
+    return bool(blbihs[index].link & 0x80000000);  
+}
+
+
+// PRIMITIVE
+bool primitive_uses_operation (uint index)
+{
+    return bool(primitives[index].x_parameter & 0x80000000);
+}
+
+bool primitive_uses_intersection (uint index)
+{
+    return bool(primitives[index].x_parameter & 0x80000000) && !(bool(primitives[index].x_parameter & 0x40000000));
+}
+
+bool primitive_uses_difference (uint index)
+{
+    return bool(primitives[index].x_parameter & 0xC0000000); 
+}
+
+uint get_primitive_x_parameter (uint index)
+{
+    return primitives[index].x_parameter & 0x3FFFFFFF;
+}
+
+uint get_primitive_depth (uint index)
+{
+    return primitives[index].y_parameter & 0x0000FFFF;
+}
+
+uint get_primitive_y_parameter (uint index)
+{
+    return (primitives[index].y_parameter & 0xFFFF0000) >> 16;
+}
+
+vec2 get_primitive_position (uint index)
+{
+    return primitives[index].position;
+}
+
+vec2 get_primitive_dimensions (uint index)
+{
+    return primitives[index].dimensions;
+}
+
+float get_primitive_radius (uint index)
+{
+    return primitives[index].radius; 
+}
+
+float get_primitive_thickness (uint index)
+{
+    return primitives[index].thickness;
+}
+
+float get_primitive_rotation (uint index)
+{
+    return primitives[index].rotation;
+}
+
+vec3 get_primitive_colour (uint index)
+{    
+    return vec3(
+        ((primitives[index].colour & 0xFF000000) >> 24) / 255.0,
+        ((primitives[index].colour & 0x00FF0000) >> 16) / 255.0,
+        ((primitives[index].colour & 0x0000FF00) >> 8) / 255.0
+    );
+}
+
+float get_primitive_opacity (uint index)
+{
+    return (primitives[index].colour & 0x000000FF) / 255.0;
+}
+
+vec2 translate_point_for_primitive (uint index, vec2 point)
+{
+    return point - get_primitive_position(index);
+}
+
+vec2 rotate_point_for_primitive (uint index, vec2 point)
+{
+    return mat2x2( cos( get_primitive_rotation(index) ), -1 * sin( get_primitive_rotation(index) ), sin( get_primitive_rotation(index) ), cos( get_primitive_rotation(index) ) ) * point;  
+}
+
+vec2 get_primitive_repetition_spacing (uint index)
+{
+    return (get_primitive_dimensions(index) + get_primitive_radius(index)) * 2.0;
+}
+
+vec2 repeat_point_for_primitive (uint index, vec2 point)
+{
+    return point - get_primitive_repetition_spacing(index) * clamp( round(point / get_primitive_repetition_spacing(index)), vec2(-1.0 * get_primitive_x_parameter(index), -1.0 * get_primitive_y_parameter(index)), vec2(get_primitive_x_parameter(index), get_primitive_y_parameter(index)) );
+}
+
+bool primitive_has_dimensions (uint index)
+{
+    return length( get_primitive_dimensions(index) ) > 0.0;
+}
+
+bool primitive_is_hollow (uint index)
+{
+    return get_primitive_thickness(index) > 0.0;
+}
+
+float get_primitive_signed_distance (uint index, vec2 point)
+{
+    point = translate_point_for_primitive(index, point);
+    point = rotate_point_for_primitive(index, point);
+    if (!primitive_uses_operation(index)) point = repeat_point_for_primitive(index, point);
+
+    // calculate dimensions of box
+    // remains equal to point if sphere
+    vec2 dimensions = primitive_has_dimensions(index) ? abs( point ) - get_primitive_dimensions(index) : point;
+    
+    // calculate mirroring
+    float clamping = primitive_has_dimensions(index) ? min( max( dimensions.x, dimensions.y ), 0.0 ) : 0.0;
+    
+    // determine point
+    point = primitive_has_dimensions(index) ? max( dimensions, vec2(0.0) ) : point;
+    
+    // determine distance
+    float signed_distance = length( point ) + clamping - get_primitive_radius(index);
+    
+    // make hollow if specified
+    signed_distance = primitive_is_hollow(index) ? abs( signed_distance ) - get_primitive_thickness(index) : signed_distance;
+    
+    // return distance
+    return signed_distance;
+}
+
+bool point_intersects_primitive (uint index, vec2 point, float scale)
+{
+    float signed_distance = get_primitive_signed_distance(index, point);
+
+    while (true)
+    {
+        index++;
+
+        if ( index >= primitive_count ) break;
+        if ( !primitive_uses_operation(index) ) break;
+
+        if ( primitive_uses_intersection(index) )
+        {
+            signed_distance = max(get_primitive_signed_distance( index, point ), signed_distance);
+        }
+        else
+        {
+            signed_distance = max(-1 * get_primitive_signed_distance( index, point ), signed_distance);
+        }
+    }
+
+    return signed_distance * scale <= 0;
+}
+
+uint determine_colour_depth (uint instance_index, uint primitive_index)
+{
+    return (get_instance_depth( instance_index ) << 10) + get_primitive_depth( primitive_index );
+}
+
+
+// PIXEL
+vec4 determine_pixel_colour (vec2 point)
+{
+    vec3 colour = vec3(0.0);
+    uint colour_depth = 0;
+    vec2 transformed_point = point;
+    uint current_tlbi = 0;
+    uint current_blbi = 0;
+
+    if ( !point_is_within_scene( point )) return vec4(colour, 1.0);
+
+    while (true) {
+
+        if ( point_intersects_tlbi( point, current_tlbi )) {
+            if ( current_tlbi_is_leaf( current_tlbi )) {
+
+                transformed_point = translate_point_for_instance( current_tlbi_target(current_tlbi), point );
+                transformed_point = rotate_point_for_instance( current_tlbi_target(current_tlbi), transformed_point );
+                transformed_point = scale_point_for_instance( current_tlbi_target(current_tlbi), transformed_point );
+
+                current_blbi = get_instance_blbi_start( current_tlbi_target(current_tlbi) );
+
+                while (true) {
+
+                    if ( point_intersects_blbi( transformed_point, current_blbi )) {
+                        if ( current_blbi_is_leaf( current_blbi )) {
+
+                            if ( point_intersects_primitive( current_blbi_target(current_blbi), transformed_point, get_instance_scale( current_tlbi_target(current_tlbi))))
+                            {
+                                if (get_primitive_opacity( current_blbi_target(current_blbi) ) > 0.0)
+                                {
+                                    colour = colour_depth > determine_colour_depth(current_tlbi_target(current_tlbi), current_blbi_target(current_blbi)) ? colour : get_primitive_colour( current_blbi_target(current_blbi) );
+
+                                    colour_depth = max(
+                                        determine_colour_depth(current_tlbi_target(current_tlbi), current_blbi_target(current_blbi)),
+                                        colour_depth
+                                    );
+                                }
+                            }
+
+                            if ( current_blbi_terminates( current_blbi )) break;
+                        }
+
+                        current_blbi++;
+                        continue;
+                    } else {
+                        if ( current_blbi_terminates( current_blbi )) break;
+
+                        current_blbi = current_blbi_miss_link( current_blbi );
+                        continue;
+                    }
+                }
+
+                if ( current_tlbi_terminates( current_tlbi )) return vec4(colour, 1.0);
+            }
+
+            current_tlbi++;
+            continue;
+        } else {
+            if ( current_tlbi_terminates( current_tlbi )) return vec4(colour, 1.0);
+
+            current_tlbi = current_tlbi_miss_link( current_tlbi );
+            continue;
+        }
+    }
+}
+
+ivec2 determine_pixel_coordinates ()
+{
+    return ivec2( clamp(gl_LocalInvocationID.xy + gl_WorkGroupID.xy * 16, ivec2(0), window_size) );
+}
+
+void main()
+{
+    ivec2 coordinates = determine_pixel_coordinates();
+    ivec2 y_inverted_coordinates = ivec2( coordinates.x, window_size.y - coordinates.y );
+
+    vec2 point = (2.0 * y_inverted_coordinates - window_size) / float(window_size.y);
+    point = transform_point_for_camera(point);
+
+    vec4 pixel_colour = determine_pixel_colour(point);
+
+    imageStore(output_image, coordinates, pixel_colour);
+}
