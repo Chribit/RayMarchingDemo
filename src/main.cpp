@@ -53,14 +53,24 @@ int main() {
                 float distance;
                 float closest_distance = 1000000.0;
 
-                // booleans for different ray marching methods
+                // initialise flags
+                // !sphere_tracing = fixed step ray marching
+                // sphere_tracing = sphere tracing
+                // sphere_tracing && enhanced = enhanced sphere tracing
                 bool sphere_tracing = true;
-                float step_size = 0.1f;
                 bool enhanced = false;
+
+                // initialise variables relevant to fixed step ray marching
+                float step_size = 0.2f;
+
+                // initialise variables relevant to enhanced sphere tracing
                 float relaxation_factor = 1.6f;
+                bool circles_overlap = false;
+                vec2 previous_position;
+                float previous_position_radius;
 
                 // march along ray
-                for (int i = 1; i < 64; i++)
+                for (int i = 0; i < 64; i++)
                 {
                     // terminate if closest distance below termination threshold 0.001
                     if (closest_distance < 0.001f) return;
@@ -82,6 +92,26 @@ int main() {
                     // if closest distance is negative = inside a shape AND we are using fixed step size ray marching
                     // halve step size
                     if (closest_distance < 0 && !sphere_tracing) step_size /= 2.0f;
+
+                    // if using enhanced sphere tracing
+                    if (sphere_tracing && enhanced)
+                    {
+                        // determine if previous step circle overlaps current step circle
+                        circles_overlap = (glm::length(current_position - previous_position) - closest_distance - previous_position_radius) <= 0;
+
+                        // if not overlapping, jump back to previous position and revert to classical sphere tracing (relaxation_factor = 1)
+                        if (!circles_overlap)
+                        {
+                            current_position = previous_position;
+                            relaxation_factor = 1.0f;
+                        }
+                        // update relevant variables if overlapping
+                        else
+                        {
+                            previous_position = current_position;
+                            previous_position_radius = closest_distance;
+                        }
+                    }
 
                     // take step along ray of size closest distance
                     // if not using sphere tracing, use fixed step size ray marching approach
