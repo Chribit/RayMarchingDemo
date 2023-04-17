@@ -8,7 +8,7 @@ static struct {
     int swapchain_frame;
     uint64_t frame_time;
     bool initialising = true;
-    OBJECT_INSTANCE pixel_object;
+    vector<OBJECT_INSTANCE> pixel_objects;
 } engine_data;
 
 // CODE
@@ -109,12 +109,15 @@ glm::vec2 get_mouse_coordinates ()
     return point;
 }
 
-void set_pixel_object (OBJECT_INSTANCE pixel_object)
+void set_pixel_objects (vector<OBJECT_INSTANCE> pixel_objects)
 {
-    engine_data.pixel_object = pixel_object;
+    sort(pixel_objects.begin(), pixel_objects.end(), [pixel_objects] (uint32_t* a, uint32_t* b) {
+        return get_instance_depth(a) > get_instance_depth(b);
+    });
+    engine_data.pixel_objects = pixel_objects;
 }
 
-OBJECT_INSTANCE get_pixel_object ()
+vector<OBJECT_INSTANCE> get_pixel_objects ()
 {
-    return engine_data.pixel_object;
+    return engine_data.pixel_objects;
 }

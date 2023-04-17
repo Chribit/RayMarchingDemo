@@ -3,12 +3,27 @@
 #include "../interface.hpp"
 
 
+// DATA
+static colour default_shape_colour = {255, 255, 255, 255};
+
+
 // CODE
+void set_default_shape_colour (colour shape_colour)
+{
+    default_shape_colour = shape_colour;
+}
+
+colour get_default_shape_colour ()
+{
+    return default_shape_colour;
+}
+
 _SHAPE::_SHAPE (string id)
 {
     if (get_shapes()->count(id) != 0) throw runtime_error("\nERROR: Shape id '" + id + "' already exists.");
     this->address = this;
     this->shape_id = id;
+    this->colour_data = get_default_shape_colour();
     set_shape(this);
 }
 
@@ -156,6 +171,7 @@ SHAPE_DATA _SHAPE::data ()
     data.x_repetition = this->x_repetition;
     data.y_repetition = this->y_repetition;
     data.colour_data = this->colour_data;
+    data.multi_shape = this->joined_shapes.size() > 0 || this->subtraction_operators.size() > 0 || this->intersection_operators.size() > 0;
     return data;
 }
 
@@ -281,9 +297,9 @@ void _SHAPE::print ()
     cout << "\ncolour: " << this->colour_data.red << ", " << this->colour_data.green << ", " << this->colour_data.blue << ", " << this->colour_data.alpha << endl << endl;
 }
 
-void _SHAPE::delete_shape ()
+void _SHAPE::delete_shape (bool erase)
 {
     if (this->is_built) delete_object(this->shape_object);
-    get_shapes()->erase(this->id());
+    if (get_shapes()->count(this->id()) > 0 && erase) get_shapes()->erase(this->id());
     delete this->address;
 }

@@ -1,6 +1,6 @@
 // DEFINE
 #pragma once
-#define SHAPE static _SHAPE
+#define SHAPE _SHAPE
 
 
 // INCLUDE
@@ -18,6 +18,7 @@ struct SHAPE_DATA
     uint16_t x_repetition;
     uint16_t y_repetition;
     colour colour_data;
+    bool multi_shape;
 };
 
 class _SHAPE
@@ -27,7 +28,7 @@ class _SHAPE
         ~_SHAPE ();
         void print ();
         string id ();
-        void delete_shape ();
+        void delete_shape (bool erase = true);
         _SHAPE& x (float new_x);
         _SHAPE& y (float new_y);
         _SHAPE& width (float new_width);
@@ -71,11 +72,13 @@ class _SHAPE
         uint16_t x_repetition = 0;
         uint16_t y_repetition = 0;
 
-        colour colour_data = {0, 0, 0, 255};
+        colour colour_data;
 };
 
 
 // CODE
+void set_default_shape_colour (colour shape_colour);
+colour get_default_shape_colour ();
 _SHAPE& shape (string id);
 int build_shape_primitive (_SHAPE* target_shape, operation operation_type);
 vector<int> build_shape (_SHAPE* target_shape);

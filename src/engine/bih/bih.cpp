@@ -87,7 +87,9 @@ void delete_object_blbih (void* target_object)
     );
 
     OBJECT current_other_object;
-    int offset;
+    int link_offset = target->bih_range.y;
+    int target_offset = target->primitive_range.y;
+
     for (int i = target->index + 1; i < get_object_pointers()->size(); i++)
     {
         current_other_object = get_object_pointers()->at(i);
@@ -95,20 +97,23 @@ void delete_object_blbih (void* target_object)
 
         for (int j = 0; j < current_other_object->bih.size(); j++)
         {
-            offset = (target->bih_range.y << 12) + target->primitive_range.y;
+            get_blbihs()->at( current_other_object->bih_range.x + j ).link -= link_offset;
+            current_other_object->bih.at(j).link -= link_offset;
 
-            get_blbihs()->at( current_other_object->bih_range.x + j ).link -= offset;
-            current_other_object->bih.at(j).link -= offset;
+            get_blbihs()->at( current_other_object->bih_range.x + j ).target -= target_offset;
+            current_other_object->bih.at(j).target -= target_offset;
         }
     }
 
-    for (int i = 0; i < get_instance_aabbs()->size(); i++)
+    for (int i = 0; i < get_instances()->size(); i++)
     {
-        if (get_instance_aabbs()->at(i).index > target->bih_range.x)
+        if (get_instance_object_index( get_instance_pointers()->at(i) ) >= target->index)
         {
-            get_instance_aabbs()->at(i).index -= target->bih_range.y;
+            get_instances()->at(i).data_two -= target->bih_range.y;
         }
     }
+
+    set_blbihs_changed(true);
 }
 
 

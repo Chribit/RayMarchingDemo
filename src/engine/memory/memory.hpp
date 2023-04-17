@@ -42,7 +42,7 @@ struct memory_buffer_flag_bits {
 #ifndef DEFINED_PC
 #define DEFINED_PC
 struct push_constants {
-    alignas(8) glm::uvec2 window_size;
+    alignas(8) glm::ivec2 window_size;
     alignas(8) glm::vec2 scene_lower_bound;
     alignas(8) glm::vec2 scene_upper_bound;
     alignas(8) glm::vec2 camera_position;
@@ -81,8 +81,8 @@ void set_push_constants (push_constants constants);
 push_constants* get_push_constants ();
 void set_push_constant_range (VkPushConstantRange range);
 VkPushConstantRange* get_push_constant_range ();
-void set_push_constant_window_size (glm::uvec2 window_size);
-glm::uvec2 get_push_constant_window_size ();
+void set_push_constant_window_size (glm::ivec2 window_size);
+glm::ivec2 get_push_constant_window_size ();
 void set_push_constant_scene_aabb (AABB scene_aabb);
 AABB get_push_constant_scene_aabb ();
 void set_push_constant_primitive_count (uint32_t primitive_count);

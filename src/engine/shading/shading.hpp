@@ -7,6 +7,7 @@
 #include "../compact/compact.hpp"
 #include "../hardware/hardware.hpp"
 #include "../descriptor/descriptor.hpp"
+#include "../file/file.hpp"
 
 // CODE
 void initialize_shaders ();

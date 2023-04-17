@@ -30,10 +30,10 @@ void run_window_resize_callbacks ();
 
 
 // KEYBOARD
-void on_key_down (function<void(int)> callback);
-void run_key_down_callbacks (int key);
-void on_key_up (function<void(int)> callback);
-void run_key_up_callbacks (int key);
+void on_key_down (function<void(int, int, int)> callback);
+void run_key_down_callbacks (int key, int scancode, int mods);
+void on_key_up (function<void(int, int, int)> callback);
+void run_key_up_callbacks (int key, int scancode, int mods);
 
 
 // CLIPBOARD
@@ -60,7 +60,7 @@ vector<function<void(glm::vec2)>>* get_mouse_leave_callbacks ();
 void set_mouse_leave_callbacks (vector<function<void(glm::vec2)>> callbacks);
 vector<function<void(glm::uvec2)>>* get_window_resize_callbacks ();
 void set_window_resize_callbacks (vector<function<void(glm::uvec2)>> callbacks);
-vector<function<void(int)>>* get_key_down_callbacks ();
-void set_key_down_callbacks (vector<function<void(int)>> callbacks);
-vector<function<void(int)>>* get_key_up_callbacks ();
-void set_key_up_callbacks (vector<function<void(int)>> callbacks);
+vector<function<void(int, int, int)>>* get_key_down_callbacks ();
+void set_key_down_callbacks (vector<function<void(int, int, int)>> callbacks);
+vector<function<void(int, int, int)>>* get_key_up_callbacks ();
+void set_key_up_callbacks (vector<function<void(int, int, int)>> callbacks);

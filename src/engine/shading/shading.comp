@@ -34,7 +34,7 @@ struct bounding_interval
 layout(local_size_x = 16, local_size_y = 16) in;
 layout(push_constant) uniform constants
 {
-	uvec2 window_size;
+	ivec2 window_size;
     vec2 scene_lower_bound;
     vec2 scene_upper_bound;
     vec2 camera_position;

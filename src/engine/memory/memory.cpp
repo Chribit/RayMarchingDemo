@@ -120,14 +120,14 @@ uint64_t determine_memory_size ()
 void initialize_push_constants ()
 {
     int width, height;
-    get_window_pixel_size(&width, &height);
+    get_window_size(&width, &height);
     push_constants constants = {
-        .window_size = glm::uvec2(width, height),
+        .window_size = glm::ivec2(width, height),
         .scene_lower_bound = glm::vec2(0.0, 0.0),
         .scene_upper_bound = glm::vec2(0.0, 0.0),
         .camera_position = glm::vec2(0.0, 0.0),
         .primitive_count = 0,
-        .camera_zoom = 1
+        .camera_zoom = 1.0f
     };
 
     set_push_constants(constants);

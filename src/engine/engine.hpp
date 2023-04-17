@@ -1,5 +1,6 @@
 // INCLUDE
 #include "./compact/compact.hpp"
+#include "./file/file.hpp"
 #include "./window/window.hpp"
 #include "./validation/validation.hpp"
 #include "./vulkan/vulkan.hpp"
@@ -57,5 +58,5 @@ void set_initialising (bool initialising);
 void set_engine_state (engine_state state);
 engine_state get_engine_state ();
 glm::vec2 get_mouse_coordinates ();
-void set_pixel_object (OBJECT_INSTANCE pixel_object);
-OBJECT_INSTANCE get_pixel_object ();
+void set_pixel_objects (vector<OBJECT_INSTANCE> pixel_objects);
+vector<OBJECT_INSTANCE> get_pixel_objects ();

@@ -12,8 +12,8 @@ static struct {
     vector<function<void(glm::vec2)>> mouse_enter;
     vector<function<void(glm::vec2)>> mouse_leave;
     vector<function<void(glm::uvec2)>> window_resize;
-    vector<function<void(int)>> key_down;
-    vector<function<void(int)>> key_up;
+    vector<function<void(int, int, int)>> key_down;
+    vector<function<void(int, int, int)>> key_up;
 } event;
 
 // CODE
@@ -107,22 +107,22 @@ void set_window_resize_callbacks (vector<function<void(glm::uvec2)>> callbacks)
     event.window_resize = callbacks;
 }
 
-vector<function<void(int)>>* get_key_down_callbacks ()
+vector<function<void(int, int, int)>>* get_key_down_callbacks ()
 {
     return &event.key_down;
 }
 
-void set_key_down_callbacks (vector<function<void(int)>> callbacks)
+void set_key_down_callbacks (vector<function<void(int, int, int)>> callbacks)
 {
     event.key_down = callbacks;
 }
 
-vector<function<void(int)>>* get_key_up_callbacks ()
+vector<function<void(int, int, int)>>* get_key_up_callbacks ()
 {
     return &event.key_up;
 }
 
-void set_key_up_callbacks (vector<function<void(int)>> callbacks)
+void set_key_up_callbacks (vector<function<void(int, int, int)>> callbacks)
 {
     event.key_up = callbacks;
 }

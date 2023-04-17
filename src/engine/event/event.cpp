@@ -132,29 +132,29 @@ void run_window_resize_callbacks ()
 
 
 // KEYBOARD
-void on_key_down (function<void(int)> callback)
+void on_key_down (function<void(int, int, int)> callback)
 {
     get_key_down_callbacks()->push_back(callback);
 }
 
-void run_key_down_callbacks (int key)
+void run_key_down_callbacks (int key, int scancode, int mods)
 {
     for (int i = 0; i < get_key_down_callbacks()->size(); i++)
     {
-        get_key_down_callbacks()->at(i)( key );
+        get_key_down_callbacks()->at(i)( key, scancode, mods );
     }
 }
 
-void on_key_up (function<void(int)> callback)
+void on_key_up (function<void(int, int, int)> callback)
 {
     get_key_up_callbacks()->push_back(callback);
 }
 
-void run_key_up_callbacks (int key)
+void run_key_up_callbacks (int key, int scancode, int mods)
 {
     for (int i = 0; i < get_key_up_callbacks()->size(); i++)
     {
-        get_key_up_callbacks()->at(i)( key );
+        get_key_up_callbacks()->at(i)( key, scancode, mods );
     }
 }
 

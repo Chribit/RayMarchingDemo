@@ -17,7 +17,6 @@ VkSurfaceKHR* get_window_surface ();
 void set_window_surface (VkSurfaceKHR surface);
 glm::uvec2 get_initial_window_size ();
 void get_window_size (int* width, int* height);
-void get_window_pixel_size (int* width, int* height);
 void set_initial_window_size (glm::uvec2 size);
 void set_window_size (uint32_t width, uint32_t height);
 void set_window_title (string title);

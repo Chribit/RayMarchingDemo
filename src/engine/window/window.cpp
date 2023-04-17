@@ -1,6 +1,7 @@
 // INCLUDE
 #include "./window.hpp"
 #include "../engine.hpp"
+#include "../event/event.hpp"
 
 // CODE
 void initialize_window ()
@@ -13,7 +14,7 @@ void initialize_window ()
     set_window( glfwCreateWindow( window_size.x, window_size.y, get_application_name().c_str(), nullptr, nullptr ) );
     glfwSetWindowUserPointer( get_window(), NULL );
 
-    glfwSetFramebufferSizeCallback( get_window(), on_window_resize );
+    glfwSetWindowSizeCallback( get_window(), on_window_resize );
 
     initialize_vulkan();
 
@@ -27,13 +28,14 @@ void initialize_window ()
 
 void on_window_resize (GLFWwindow* window, int width, int height)
 {
-    set_push_constant_window_size( glm::uvec2(width, height) );
+    set_push_constant_window_size( glm::ivec2(width, height) );
 
+    run_window_resize_callbacks();
     render();
     set_window_resized(true);
 
     #if DEBUG
-        cout << "\nResized window to dimensions " << width << " x " << height << "." << endl;
+        cout << "\tResized window to dimensions " << width << " x " << height << "." << endl;
     #endif
 }
 

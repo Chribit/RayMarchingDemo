@@ -57,7 +57,7 @@ indexed_aabb determine_instance_aabb (OBJECT_INSTANCE target_instance)
 
 uint32_t encode_instance_data_one (uint16_t object_index, uint32_t instance_depth)
 {
-    return ((uint32_t) object_index << 16) + ((instance_depth & 0x00FFFF00) >> 16);
+    return ((uint32_t) object_index << 16) + ((instance_depth & 0x00FFFF00) >> 8);
 }
 
 uint32_t encode_instance_data_two (uint32_t instance_depth, uint32_t object_bih_start)
@@ -233,6 +233,11 @@ void delete_object_instances (void* target_object)
             get_instance_pointers()->erase( get_instance_pointers()->begin() + *current_instance_pointer );
             get_instance_aabbs()->erase( get_instance_aabbs()->begin() + *current_instance_pointer );
             delete current_instance_pointer;
+
+            for (int i = index; i < get_instance_aabbs()->size(); i++)
+            {
+                get_instance_aabbs()->at(i).index--;
+            }
         }
 
         index--;

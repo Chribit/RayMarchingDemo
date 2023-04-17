@@ -204,8 +204,8 @@ AABB determine_primitive_aabb (int primitive_index)
     glm::vec2 dimensions_aabb_extent = {glm::max(abs(top_corner.x), abs(bottom_corner.x)), glm::max(abs(top_corner.y), abs(bottom_corner.y))};
 
     AABB output;
-    output.lower_bound = -1.0f * dimensions_aabb_extent - target.radius - (target.thickness / 2.0f);
-    output.upper_bound = dimensions_aabb_extent + target.radius + (target.thickness / 2.0f);
+    output.lower_bound = -1.0f * dimensions_aabb_extent - target.radius - target.thickness;
+    output.upper_bound = dimensions_aabb_extent + target.radius + target.thickness;
 
     bool using_intersection;
     bool using_difference;
@@ -237,6 +237,8 @@ void update_primitive_colour (void* target_object, int primitive_index, colour c
     colour_constructor_data.alpha = colour_data.alpha;
 
     get_primitives()->at(target->primitive_range.x + primitive_index).colour = encode_colour( colour_constructor_data );
+
+    set_primitives_changed(true);
 }
 
 
@@ -303,4 +305,6 @@ void delete_object_primitives (void* target_object)
             current_object->primitive_aabbs[j].index -= target->primitive_range.y;
         }
     }
+
+    set_primitives_changed(true);
 }

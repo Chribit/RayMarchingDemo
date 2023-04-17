@@ -4,3 +4,7 @@
 #include "./shape/shape.cpp"
 #include "./component/component.cpp"
 #include "./line/line.cpp"
+#include "./event/event.cpp"
+#include "./event/event.access.cpp"
+#include "./text/text.cpp"
+#include "./text/text.access.cpp"

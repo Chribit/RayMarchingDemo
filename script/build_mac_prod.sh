@@ -1,7 +1,7 @@
 rm -rf "/Users/chribit/Documents/Github/RayMarchingDemo/out"
 mkdir "/Users/chribit/Documents/Github/RayMarchingDemo/out"
 
-source_folder=""
+cp -a "/Users/chribit/Documents/Github/RayMarchingDemo/lib/graphics/mac/shading" "/Users/chribit/Documents/Github/RayMarchingDemo/out/shading"
 
 /usr/bin/g++ \
     -std=c++17 \

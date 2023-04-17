@@ -3,11 +3,18 @@
 
 
 // CODE
-void create_interface (string application_name, function<void()> interface_code)
+void create_interface (string application_name, uvec2 window_size, function<void()> interface_code)
 {
+    register_component(
+        any_cast<OBJECT_INSTANCE>(get_root().state("instance")),
+        get_root_pointer()
+    );
+
+    initialise_events();
+
     on_initialisation(interface_code);
 
-    start_engine("Signed Distance Field Engine", application_name, 960, 540);
+    start_engine("Signed Distance Field Engine", application_name, window_size.x, window_size.y);
 
     cleanup_interface();
 }

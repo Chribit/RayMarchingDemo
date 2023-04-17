@@ -1,9 +1,4 @@
 // DEFINE
-#if FOR_WIN
-    #define PATH_SEPERATOR "\\"
-#else
-    #define PATH_SEPERATOR "/"
-#endif
 #define GLFW_INCLUDE_VULKAN 
 
 
@@ -24,6 +19,7 @@
 #include "iomanip"
 #include "functional"
 #include "numeric"
+#include "filesystem"
 
 
 // OS SPECIFIC INCLUDE
@@ -54,10 +50,6 @@ struct AABB
 
 // CODE
 void replace_characters (string& text, string original, string replacement);
-string get_executable_path ();
-string get_working_directory ();
-string get_path (string relative_path);
-vector<char> read_file (string& file_path);
 void throw_error (bool condition, string error_text);
 string get_result_string (VkResult vulkan_result);
 VkStructureType get_structure_type (string type);

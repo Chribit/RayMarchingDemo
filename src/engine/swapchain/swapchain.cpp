@@ -180,11 +180,11 @@ void recreate_swapchain ()
 {
     int width;
     int height;
-    get_window_pixel_size( &width, &height );
+    get_window_size( &width, &height );
 
     while ( is_window_minimized( &width, &height ) )
     {
-        get_window_pixel_size( &width, &height );
+        get_window_size( &width, &height );
         glfwWaitEvents();
     }
 

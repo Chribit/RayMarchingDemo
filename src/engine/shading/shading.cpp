@@ -45,9 +45,10 @@ void initialize_shaders ()
 
 VkShaderModule create_shader_module (string file_name)
 {
-    string compute_shader_path = "/Users/chribit/Documents/Github/Graphics/release/" + string(VERSION) + "/mac/shading/" + file_name + ".spv";
+    string compute_shader_path = get_absolute_path("shading/" + file_name + ".spv");
 
-    vector<char> compute_shader_code = read_file(compute_shader_path);
+    string file_content = read_file(compute_shader_path);
+    vector<char> compute_shader_code(file_content.begin(), file_content.end());
 
     VkShaderModule shader_module;
     VkResult result = vkCreateShaderModule( *get_hardware(), shader_module_creation_info(compute_shader_code), nullptr, &shader_module);

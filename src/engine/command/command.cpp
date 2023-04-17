@@ -152,7 +152,7 @@ void record_command_buffer (int swapchain_frame)
 
     int width;
     int height;
-    get_window_pixel_size(&width, &height);
+    get_window_size(&width, &height);
 
     #if DEBUG
         cout << "\tDispatching " << determine_workgroup_count(width) << " x " << determine_workgroup_count(height) << " work groups." << endl;

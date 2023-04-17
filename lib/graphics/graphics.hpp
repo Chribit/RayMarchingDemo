@@ -1,4 +1,5 @@
 // DEFINE
+#pragma once
 #if FOR_WIN
     #define PATH_SEPERATOR "\\"
 #else
@@ -41,6 +42,17 @@ using namespace std::chrono;
 
 
 // DATA
+#ifndef DEFINED_FI
+#define DEFINED_FI
+struct folder_item
+{
+    bool is_folder;
+    string name;
+    string path;
+    uint32_t size = 0;
+};
+#endif
+
 #ifndef DEFINED_AABB
 #define DEFINED_AABB
 struct AABB
@@ -167,12 +179,23 @@ struct engine_state
 
 
 // CODE
+string get_executable_path ();
+string get_executable_folder_path ();
+string get_absolute_path (string relative_path);
+bool path_exists (string path);
+void create_folder (string path);
+vector<folder_item> read_folder (string path);
+string read_file (string path);
+void write_file (string path, string bytes, uint32_t byte_offset = 0);
+void delete_path (string path);
 void start_engine (string engine_name, string application_name, uint32_t width, uint32_t height);
 void set_camera_state (glm::vec2 position, float zoom);
 void set_engine_state (engine_state state);
 engine_state get_engine_state ();
-void set_pixel_object (OBJECT_INSTANCE pixel_object);
-OBJECT_INSTANCE get_pixel_object ();
+void set_pixel_objects (vector<OBJECT_INSTANCE> pixel_objects);
+vector<OBJECT_INSTANCE> get_pixel_objects ();
+GLFWwindow* get_window ();
+glm::vec2 get_mouse_coordinates ();
 void on_initialisation (function<void()> callback);
 void on_render_completion (function<void()> callback);
 void on_mouse_move (function<void(glm::vec2)> callback);
@@ -182,8 +205,8 @@ void on_mouse_scroll (function<void(glm::vec2, glm::dvec2)> callback);
 void on_mouse_enter (function<void(glm::vec2)> callback);
 void on_mouse_leave (function<void(glm::vec2)> callback);
 void on_window_resize (function<void(glm::uvec2)> callback);
-void on_key_down (function<void(int)> callback);
-void on_key_up (function<void(int)> callback);
+void on_key_down (function<void(int, int, int)> callback);
+void on_key_up (function<void(int, int, int)> callback);
 const char* get_clipboard ();
 void set_clipboard (const char* string);
 OBJECT_INSTANCE create_instance (void* target_object, glm::vec2 position, float scale, float rotation);

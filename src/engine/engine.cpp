@@ -43,13 +43,9 @@ void initialize ()
         else run_mouse_leave_callbacks();
     });
 
-    glfwSetWindowSizeCallback( get_window(), [](GLFWwindow* window, int width, int height) {
-        run_window_resize_callbacks();
-    });
-
     glfwSetKeyCallback( get_window(), [](GLFWwindow* window, int key, int scancode, int action, int mods) {
-        if (action == GLFW_PRESS) run_key_down_callbacks(key);
-        else if (action == GLFW_RELEASE) run_key_up_callbacks(key);
+        if (action == GLFW_PRESS) run_key_down_callbacks(key, scancode, mods);
+        else if (action == GLFW_RELEASE) run_key_up_callbacks(key, scancode, mods);
     });
 
     run_initialisation_callbacks();

@@ -1,6 +1,6 @@
 // DEFINE
 #pragma once
-#define LINE static _LINE
+#define LINE _LINE
 
 
 // INCLUDE
@@ -30,8 +30,12 @@ class _LINE
         uint32_t blue ();
         _LINE& blue (uint32_t new_blue);
         _LINE& draw ();
+        string id ();
+        void print ();
+        void delete_line ();
 
     private:
+        _LINE* address = nullptr;
         _COMPONENT* line_component = nullptr;
 };
 

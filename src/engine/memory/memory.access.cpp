@@ -78,16 +78,15 @@ VkPushConstantRange* get_push_constant_range ()
     return &memory.push_constant_range;
 }
 
-void set_push_constant_window_size (glm::uvec2 window_size)
+void set_push_constant_window_size (glm::ivec2 window_size)
 {
     memory.push_constants.window_size = window_size;
 }
 
-glm::uvec2 get_push_constant_window_size ()
+glm::ivec2 get_push_constant_window_size ()
 {
     return memory.push_constants.window_size;
 }
-
 
 void set_push_constant_scene_aabb (AABB scene_aabb)
 {

@@ -1,6 +1,7 @@
 #include "engine.cpp"
 #include "engine.access.cpp"
 #include "./compact/compact.cpp"
+#include "./file/file.cpp"
 #include "./window/window.cpp"
 #include "./window/window.access.cpp"
 #include "./validation/validation.cpp"

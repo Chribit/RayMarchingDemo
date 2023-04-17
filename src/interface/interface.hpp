@@ -3,15 +3,18 @@
 #include "./shape/shape.hpp"
 #include "./component/component.hpp"
 #include "./line/line.hpp"
+#include "./event/event.hpp"
+#include "./text/text.hpp"
 
 
 // CODE
-void create_interface (string application_name, function<void()> code);
+void create_interface (string application_name, uvec2 window_size, function<void()> interface_code);
 void cleanup_interface ();
 
 
 // ACCESS
-_COMPONENT* get_root ();
+_COMPONENT& get_root ();
+_COMPONENT* get_root_pointer ();
 map<string, _SHAPE*>* get_shapes ();
 _SHAPE& get_shape (string id);
 void set_shape (_SHAPE* new_shape);

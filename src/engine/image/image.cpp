@@ -168,12 +168,10 @@ void command_image_layout_transition (VkCommandBuffer command_buffer, VkImageLay
 
 void determine_image_extent ()
 {
-    // OPTIMISE: capabilties variable is unused
-    VkSurfaceCapabilitiesKHR capabilities = (*get_swapchain_support_details()).surface_capabilities;
     VkExtent2D extent;
 
     int width, height;
-    get_window_pixel_size( &width, &height );
+    get_window_size( &width, &height );
 
     extent = {
         .width = static_cast<uint32_t>(width), 

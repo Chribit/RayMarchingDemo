@@ -371,15 +371,14 @@ void determine_pixel_object ()
 {
     glm::vec2 point = get_mouse_coordinates();
 
-    OBJECT_INSTANCE picked_object = new uint32_t(0xFFFFFFFF);
-    uint32_t depth = 0;
+    vector<OBJECT_INSTANCE> picked_objects;
     glm::vec2 transformed_point = point;
     uint32_t current_tlbi = 0;
     uint32_t current_blbi = 0;
 
     if ( !point_is_within_scene( point ))
     {
-        set_pixel_object(picked_object);
+        set_pixel_objects(picked_objects);
         return;
     }
 
@@ -404,11 +403,8 @@ void determine_pixel_object ()
                             {
                                 if (get_primitive_opacity( current_blbi_target(current_blbi) ) > 0.0)
                                 {
-                                    picked_object = depth > determine_colour_depth(current_tlbi_target(current_tlbi), current_blbi_target(current_blbi)) ? picked_object : get_instance_pointers()->at( current_tlbi_target(current_tlbi) );
-
-                                    depth = glm::max(
-                                        determine_colour_depth(current_tlbi_target(current_tlbi), current_blbi_target(current_blbi)),
-                                        depth
+                                    picked_objects.push_back(
+                                        get_instance_pointers()->at( current_tlbi_target(current_tlbi) )
                                     );
                                 }
                             }
@@ -430,7 +426,7 @@ void determine_pixel_object ()
 
                 if ( current_tlbi_terminates( current_tlbi ))
                 {
-                    set_pixel_object(picked_object);
+                    set_pixel_objects(picked_objects);
                     return;
                 }
             }
@@ -441,7 +437,7 @@ void determine_pixel_object ()
         else {
             if ( current_tlbi_terminates( current_tlbi ))
             {
-                set_pixel_object(picked_object);
+                set_pixel_objects(picked_objects);
                 return;
             }
 

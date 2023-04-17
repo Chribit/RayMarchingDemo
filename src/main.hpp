@@ -1,5 +1,6 @@
 #include "iostream"
-#include "../lib/ui/interface.hpp"
+#include "../lib/interface/interface.hpp"
+#include "../lib/graphics/graphics.hpp"
 #include "glm/glm.hpp"
 
 using namespace std;

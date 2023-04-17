@@ -42,11 +42,6 @@ void get_window_size (int* width, int* height)
     glfwGetWindowSize( get_window(), width, height );
 }
 
-void get_window_pixel_size (int* width, int* height)
-{
-    glfwGetFramebufferSize( get_window(), width, height );
-}
-
 void set_initial_window_size (glm::uvec2 size)
 {
     window.initial_width = size.x;

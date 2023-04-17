@@ -13,7 +13,12 @@ static struct {
 
 
 // CODE
-_COMPONENT* get_root ()
+_COMPONENT& get_root ()
+{
+    return *interface.root;
+}
+
+_COMPONENT* get_root_pointer ()
 {
     return interface.root;
 }
