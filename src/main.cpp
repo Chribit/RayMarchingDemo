@@ -36,6 +36,24 @@ float get_primitive_signed_distance (string shape_id, int shape_index, vec2 poin
     return signed_distance;
 }
 
+float get_shortest_distance (vector<string>* shape_ids, vec2 current_position)
+{
+    float distance;
+    float closest_distance = 100.0;
+    
+    // iterate over shapes
+    for (int j = 0; j < shape_ids->size(); j++)
+    {
+        // get distance to shape
+        distance = get_primitive_signed_distance(shape_ids->at(j), j, current_position);
+
+        // if smaller than current smallest distance, store new smallest distance
+        closest_distance = distance < closest_distance ? distance : closest_distance;
+    }
+
+    return closest_distance;
+}
+
 void update_circle (int index, vec2 position, float radius)
 {
     // determine circle shape id
@@ -67,18 +85,18 @@ int main() {
 
             // create pink circle shape to showcase basic shape
             component("pink_circle").add(
-                &shape("pink_circle").radius(1.0f).red(249).green(9).blue(145).build()
-            ).position({-1.0, 6.0});
+                &shape("pink_circle").radius(1.5f).red(249).green(9).blue(145).build()
+            ).position({-1.0, 7.0});
 
             // create blue rounded square shape to showcase rounding
             component("blue_rounded_rectangle").add(
                 &shape("blue_rounded_square").width(3.0f).height(2.0f).round(0.4f).red(9).green(221).blue(249).build()
-            ).position({-1.0, -4.0});
+            ).position({-7.0, -6.0});
 
             // create yellow rotated square shape to showcase what happens at angles
             component("yellow_rectangle").add(
                 &shape("yellow_rectangle").width(2.0f).height(2.0f).red(252).green(233).blue(27).build()
-            ).position({2.0, -0.5}).rotation(45.0f);
+            ).position({0.0, -1.5}).rotation(45.0f);
 
             // create pink slab to showcase overstepping along a ray
             component("pink_slab").add(
@@ -127,46 +145,27 @@ int main() {
 
                 // initialise variables
                 vec2 current_position = ray_origin;
-                float distance;
-                float closest_distance = 100.0;
+                float closest_distance;
 
                 // initialise flags
                 bool naive = false;
-                bool sphere = true;
-                bool enhanced = false;
+                bool sphere = false;
+                bool enhanced = true;
 
                 // initialise variables relevant to fixed step ray marching
                 float step_size = 1.0f;
 
                 // initialise variables relevant to enhanced sphere tracing
-                float relaxation_factor = 1.6f;
+                float relaxation_factor = 1.5f;
                 bool circles_overlap = false;
-                vec2 previous_position;
-                float previous_position_radius;
+                vec2 previous_position = ray_origin;
+                float previous_position_radius = 0.0f;
 
                 // march along ray
                 for (int i = 0; i < 64; i++)
                 {
-                    // reset closest distance to some large distance outside of screen space
-                    closest_distance = 100.0;
-
-                    // determine closest signed distance to scene
-                    // in this case, simply iterate over shapes
-                    for (int j = 0; j < shape_ids.size(); j++)
-                    {
-                        // get distance to shape
-                        distance = get_primitive_signed_distance(shape_ids.at(j), j, current_position);
-
-                        // if smaller than current smallest distance, store new smallest distance
-                        closest_distance = distance < closest_distance ? distance : closest_distance;
-                    }
-
-                    // update circle for step
-                    update_circle(i, current_position, naive ? step_size : closest_distance);
-
-                    // if closest distance is negative = inside a shape AND we are using fixed step size ray marching
-                    // halve step size
-                    // if (closest_distance < 0 && !sphere_tracing) step_size /= 2.0f;
+                    // determine closest signed distance in scene
+                    closest_distance = get_shortest_distance(&shape_ids, current_position);
 
                     // if using enhanced sphere tracing
                     if (enhanced)
@@ -174,23 +173,28 @@ int main() {
                         // determine if previous step circle overlaps current step circle
                         circles_overlap = (glm::length(current_position - previous_position) - closest_distance - previous_position_radius) <= 0;
 
-                        // if not overlapping, jump back to previous position and revert to classical sphere tracing (relaxation_factor = 1)
+                        // if not overlapping:
+                        // 1. jump back to previous position
+                        // 2. revert to naive ray marching
+                        // 3. reevaluate distance
                         if (!circles_overlap)
                         {
-                            current_position = previous_position;
+                            current_position = previous_position + direction * previous_position_radius;
                             relaxation_factor = 1.0f;
+                            closest_distance = get_shortest_distance(&shape_ids, current_position);
                         }
+
                         // update relevant variables if overlapping
-                        else
-                        {
-                            previous_position = current_position;
-                            previous_position_radius = closest_distance;
-                        }
+                        previous_position = current_position;
+                        previous_position_radius = closest_distance;
                     }
+
+                    // update circle for step
+                    update_circle(i, current_position, naive ? step_size : closest_distance);
 
                     // take step along ray of size closest distance
                     // if performing enhanced sphere tracing, factor in relaxation factor
-                    current_position += direction * (naive ? step_size : closest_distance) * (enhanced ? relaxation_factor : 1.0f);
+                    current_position += direction * ((naive ? step_size : closest_distance) * (enhanced ? relaxation_factor : 1.0f));
 
                     // terminate if closest distance below termination threshold 0.001
                     // terminate if closest distance is to large (and naive ray marching is not used)
