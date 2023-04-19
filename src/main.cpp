@@ -3,6 +3,39 @@
 
 
 // CODE
+vec2 get_primitive_position (string shape_id)
+{
+    return get_component(shape_id).position();
+}
+
+float get_primitive_rotation (string shape_id)
+{
+    return radians( get_component(shape_id).rotation() );
+}
+
+vec2 translate_point_for_primitive (string shape_id, vec2 point)
+{
+    return point - get_primitive_position(shape_id);
+}
+
+vec2 rotate_point_for_primitive (string shape_id, vec2 point)
+{
+    return mat2x2( cos( get_primitive_rotation(shape_id) ), -1 * sin( get_primitive_rotation(shape_id) ), sin( get_primitive_rotation(shape_id) ), cos( get_primitive_rotation(shape_id) ) ) * point;  
+}
+
+float get_primitive_signed_distance (string shape_id, int shape_index, vec2 point)
+{
+    // translate and rotate point
+    point = translate_point_for_primitive(shape_id, point);
+    point = rotate_point_for_primitive(shape_id, point);
+
+    // get signed distance
+    float signed_distance = get_primitive_signed_distance(point, shape_index);
+    
+    // return distance
+    return signed_distance;
+}
+
 void update_circle (int index, vec2 position, float radius)
 {
     // determine circle shape id
@@ -14,7 +47,7 @@ void update_circle (int index, vec2 position, float radius)
 
     // replace old circle with new circle
     get_component("circles").replace(index, 
-        &shape(circle_id).x(position.x).y(position.y).radius(radius).thickness(0.025).build()
+        &shape(circle_id).x(position.x).y(position.y).radius(radius).thickness(0.025).visible(radius != 0.0).build()
     );
 
     // delete old circle (graphics engine object)
@@ -35,12 +68,22 @@ int main() {
             // create pink circle shape to showcase basic shape
             component("pink_circle").add(
                 &shape("pink_circle").radius(1.0f).red(249).green(9).blue(145).build()
-            ).position({3.0, 6.0});
+            ).position({-1.0, 6.0});
 
             // create blue rounded square shape to showcase rounding
-            component("blue_rounded_square").add(
-                &shape("blue_rounded_square").width(3.0f).height(2.0f).round(0.2f).red(9).green(221).blue(249).build()
+            component("blue_rounded_rectangle").add(
+                &shape("blue_rounded_square").width(3.0f).height(2.0f).round(0.4f).red(9).green(221).blue(249).build()
             ).position({-1.0, -4.0});
+
+            // create yellow rotated square shape to showcase what happens at angles
+            component("yellow_rectangle").add(
+                &shape("yellow_rectangle").width(2.0f).height(2.0f).red(252).green(233).blue(27).build()
+            ).position({2.0, -0.5}).rotation(45.0f);
+
+            // create pink slab to showcase overstepping along a ray
+            component("pink_slab").add(
+                &shape("pink_slab").width(0.3f).height(5.0f).red(240).green(10).blue(252).build()
+            ).position({5.0, 4.0}).rotation(10.0f);
 
             // create moon shape to showcase subtraction / difference operation
             // component("moon").add(
@@ -52,7 +95,9 @@ int main() {
             // create vector of components to iterate over
             static vector<string> shape_ids = {
                 "pink_circle",
-                "blue_rounded_square",
+                "blue_rounded_rectangle",
+                "yellow_rectangle",
+                "pink_slab"
                 // "moon"
             };
 
@@ -86,14 +131,12 @@ int main() {
                 float closest_distance = 100.0;
 
                 // initialise flags
-                // !sphere_tracing = fixed step ray marching
-                // sphere_tracing = sphere tracing
-                // sphere_tracing && enhanced = enhanced sphere tracing
-                bool sphere_tracing = true;
+                bool naive = false;
+                bool sphere = true;
                 bool enhanced = false;
 
                 // initialise variables relevant to fixed step ray marching
-                float step_size = 0.2f;
+                float step_size = 1.0f;
 
                 // initialise variables relevant to enhanced sphere tracing
                 float relaxation_factor = 1.6f;
@@ -106,13 +149,10 @@ int main() {
                 {
                     // terminate if closest distance below termination threshold 0.001
                     // terminate if closest distance is to large
-                    if (closest_distance < 0.001f || i > 0 && closest_distance > 11.0)
+                    if (closest_distance < 0.001f || i > 0 && closest_distance > 11.0 && !naive)
                     {
                         // replace remaining circles that did not get redrawn with "null" circles
-                        for (int j = i; j < 64; j++)
-                        {
-                            update_circle(j, {0.0, 0.0}, 0.0);
-                        }
+                        for (int j = i; j < 64; j++) update_circle(j, {0.0, 0.0}, 0.0);
                         return;
                     }
 
@@ -124,21 +164,21 @@ int main() {
                     for (int j = 0; j < shape_ids.size(); j++)
                     {
                         // get distance to shape
-                        distance = get_primitive_signed_distance(current_position - get_component(shape_ids.at(j)).position(), j);
+                        distance = get_primitive_signed_distance(shape_ids.at(j), j, current_position);
 
                         // if smaller than current smallest distance, store new smallest distance
                         closest_distance = distance < closest_distance ? distance : closest_distance;
                     }
 
                     // update circle for step
-                    update_circle(i, current_position, closest_distance);
+                    update_circle(i, current_position, naive ? step_size : closest_distance);
 
                     // if closest distance is negative = inside a shape AND we are using fixed step size ray marching
                     // halve step size
-                    if (closest_distance < 0 && !sphere_tracing) step_size /= 2.0f;
+                    // if (closest_distance < 0 && !sphere_tracing) step_size /= 2.0f;
 
                     // if using enhanced sphere tracing
-                    if (sphere_tracing && enhanced)
+                    if (enhanced)
                     {
                         // determine if previous step circle overlaps current step circle
                         circles_overlap = (glm::length(current_position - previous_position) - closest_distance - previous_position_radius) <= 0;
@@ -158,9 +198,8 @@ int main() {
                     }
 
                     // take step along ray of size closest distance
-                    // if not using sphere tracing, use fixed step size ray marching approach
-                    // if enhanced flag set in addition to using sphere tracing, use relaxation factor
-                    current_position += direction * (sphere_tracing ? closest_distance : step_size) * (sphere_tracing && enhanced ? relaxation_factor : 1.0f);
+                    // if performing enhanced sphere tracing, factor in relaxation factor
+                    current_position += direction * (naive ? step_size : closest_distance) * (enhanced ? relaxation_factor : 1.0f);
                 }
             
             });
