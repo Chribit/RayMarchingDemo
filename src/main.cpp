@@ -82,7 +82,7 @@ int main() {
 
             // create pink slab to showcase overstepping along a ray
             component("pink_slab").add(
-                &shape("pink_slab").width(0.3f).height(5.0f).red(240).green(10).blue(252).build()
+                &shape("pink_slab").width(0.75f).height(5.0f).red(240).green(10).blue(252).build()
             ).position({5.0, 4.0}).rotation(10.0f);
 
             // create moon shape to showcase subtraction / difference operation
@@ -147,15 +147,6 @@ int main() {
                 // march along ray
                 for (int i = 0; i < 64; i++)
                 {
-                    // terminate if closest distance below termination threshold 0.001
-                    // terminate if closest distance is to large
-                    if (closest_distance < 0.001f || i > 0 && closest_distance > 11.0 && !naive)
-                    {
-                        // replace remaining circles that did not get redrawn with "null" circles
-                        for (int j = i; j < 64; j++) update_circle(j, {0.0, 0.0}, 0.0);
-                        return;
-                    }
-
                     // reset closest distance to some large distance outside of screen space
                     closest_distance = 100.0;
 
@@ -200,6 +191,15 @@ int main() {
                     // take step along ray of size closest distance
                     // if performing enhanced sphere tracing, factor in relaxation factor
                     current_position += direction * (naive ? step_size : closest_distance) * (enhanced ? relaxation_factor : 1.0f);
+
+                    // terminate if closest distance below termination threshold 0.001
+                    // terminate if closest distance is to large (and naive ray marching is not used)
+                    if (closest_distance < 0.001f || closest_distance > 11.0 && !naive)
+                    {
+                        // replace remaining circles that did not get redrawn with "null" circles
+                        for (int j = i; j < 64; j++) update_circle(j, {0.0, 0.0}, 0.0);
+                        return;
+                    }
                 }
             
             });
