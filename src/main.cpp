@@ -131,6 +131,34 @@ int main() {
                 );
             }
 
+            // initialise flags
+            static bool naive = false;
+            static bool sphere = false;
+            static bool enhanced = true;
+
+            // listen for keyboard events
+            get_root().listen("hot key press", [](event* data) {
+
+                if (get_string(data, "name") == "one")
+                {
+                    naive = true;
+                    sphere = false;
+                    enhanced = false;
+                }
+                if (get_string(data, "name") == "two")
+                {
+                    naive = false;
+                    sphere = true;
+                    enhanced = false;
+                }
+                if (get_string(data, "name") == "three")
+                {
+                    naive = false;
+                    sphere = false;
+                    enhanced = true;
+                }
+            });
+
             // update line to follow cursor
             on_mouse_move([](vec2 position) {
 
@@ -146,11 +174,6 @@ int main() {
                 // initialise variables
                 vec2 current_position = ray_origin;
                 float closest_distance;
-
-                // initialise flags
-                bool naive = false;
-                bool sphere = false;
-                bool enhanced = true;
 
                 // initialise variables relevant to fixed step ray marching
                 float step_size = 1.0f;
