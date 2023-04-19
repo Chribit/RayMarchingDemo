@@ -115,20 +115,12 @@ int main() {
                 &shape("pink_slab").width(0.75f).height(5.0f).red(240).green(10).blue(252).build()
             ).position({-5.0, 4.0}).rotation(10.0f);
 
-            // create moon shape to showcase subtraction / difference operation
-            // component("moon").add(
-            //     &shape("moon").radius(1.5f).red(253).green(255).blue(214).subtract(
-            //         &shape("moon_stencil").radius(1.25f).x(0.35f).build()
-            //     ).build()
-            // ).position({-3.0, 2.0});
-
             // create vector of components to iterate over
             static vector<string> shape_ids = {
                 "pink_circle",
                 "blue_rounded_rectangle",
                 "yellow_rectangle",
                 "pink_slab"
-                // "moon"
             };
 
             // draw line
