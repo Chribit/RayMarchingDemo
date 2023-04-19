@@ -144,9 +144,9 @@ int main() {
             }
 
             // initialise flags
-            static bool naive = false;
+            static bool naive = true;
             static bool sphere = false;
-            static bool enhanced = true;
+            static bool enhanced = false;
 
             // listen for keyboard events
             get_root().listen("hot key press", [](event* data) {
