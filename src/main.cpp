@@ -37,88 +37,92 @@ int main() {
             };
 
             // draw line
-            line("ray").from({-12.0, 0.0}).to({12.0, 0.0}).thickness(0.02f).radius(0.01f).draw();
+            line("ray").from({-12.0, 0.0}).to({12.0, 0.0}).thickness(0.05f).radius(0.01f).draw();
 
             // update line to follow cursor
-            // on_mouse_move([](vec2 position) {
+            on_mouse_move([](vec2 position) {
 
-            //     // init ray origin
-            //     vec2 ray_origin = get_line("ray").from();
+                // init ray origin
+                vec2 ray_origin = get_line("ray").from();
 
-            //     // determine line direction from cursor position minus origin position
-            //     vec2 direction = glm::normalize(position - ray_origin);
+                // determine line direction from cursor position minus origin position
+                vec2 direction = glm::normalize(position - ray_origin);
 
-            //     // initialise variables
-            //     vec2 current_position = ray_origin;
-            //     float distance;
-            //     float closest_distance = 1000000.0;
+                // update ray direction
+                get_line("ray").to(ray_origin + direction * 100.0f).draw();
 
-            //     // initialise flags
-            //     // !sphere_tracing = fixed step ray marching
-            //     // sphere_tracing = sphere tracing
-            //     // sphere_tracing && enhanced = enhanced sphere tracing
-            //     bool sphere_tracing = true;
-            //     bool enhanced = false;
+                // initialise variables
+                vec2 current_position = ray_origin;
+                float distance;
+                float closest_distance = 1000000.0;
 
-            //     // initialise variables relevant to fixed step ray marching
-            //     float step_size = 0.2f;
+                // initialise flags
+                // !sphere_tracing = fixed step ray marching
+                // sphere_tracing = sphere tracing
+                // sphere_tracing && enhanced = enhanced sphere tracing
+                bool sphere_tracing = true;
+                bool enhanced = false;
 
-            //     // initialise variables relevant to enhanced sphere tracing
-            //     float relaxation_factor = 1.6f;
-            //     bool circles_overlap = false;
-            //     vec2 previous_position;
-            //     float previous_position_radius;
+                // initialise variables relevant to fixed step ray marching
+                float step_size = 0.2f;
 
-            //     // march along ray
-            //     for (int i = 0; i < 64; i++)
-            //     {
-            //         // terminate if closest distance below termination threshold 0.001
-            //         if (closest_distance < 0.001f) return;
+                // initialise variables relevant to enhanced sphere tracing
+                float relaxation_factor = 1.6f;
+                bool circles_overlap = false;
+                vec2 previous_position;
+                float previous_position_radius;
 
-            //         // reset closest distance to some large distance outside of screen space
-            //         closest_distance = 1000000.0;
+                // march along ray
+                for (int i = 0; i < 64; i++)
+                {
+                    // terminate if closest distance below termination threshold 0.001
+                    if (closest_distance < 0.001f) return;
 
-            //         // determine closest signed distance to scene
-            //         // in this case, simply iterate over shapes
-            //         for (int j = 0; j < shapes.size(); j++)
-            //         {
-            //             // get distance to shape
-            //             distance = get_primitive_signed_distance(current_position - shapes[j].position(), j);
+                    // reset closest distance to some large distance outside of screen space
+                    closest_distance = 1000000.0;
 
-            //             // if smaller than current smallest distance, store new smallest distance
-            //             closest_distance = distance < closest_distance ? distance : closest_distance;
-            //         }
+                    // determine closest signed distance to scene
+                    // in this case, simply iterate over shapes
+                    for (int j = 0; j < shape_ids.size(); j++)
+                    {
+                        // get distance to shape
+                        distance = get_primitive_signed_distance(current_position - get_component(shape_ids.at(j)).position(), j);
 
-            //         // if closest distance is negative = inside a shape AND we are using fixed step size ray marching
-            //         // halve step size
-            //         if (closest_distance < 0 && !sphere_tracing) step_size /= 2.0f;
+                        // if smaller than current smallest distance, store new smallest distance
+                        closest_distance = distance < closest_distance ? distance : closest_distance;
+                    }
 
-            //         // if using enhanced sphere tracing
-            //         if (sphere_tracing && enhanced)
-            //         {
-            //             // determine if previous step circle overlaps current step circle
-            //             circles_overlap = (glm::length(current_position - previous_position) - closest_distance - previous_position_radius) <= 0;
+                    // if closest distance is negative = inside a shape AND we are using fixed step size ray marching
+                    // halve step size
+                    if (closest_distance < 0 && !sphere_tracing) step_size /= 2.0f;
 
-            //             // if not overlapping, jump back to previous position and revert to classical sphere tracing (relaxation_factor = 1)
-            //             if (!circles_overlap)
-            //             {
-            //                 current_position = previous_position;
-            //                 relaxation_factor = 1.0f;
-            //             }
-            //             // update relevant variables if overlapping
-            //             else
-            //             {
-            //                 previous_position = current_position;
-            //                 previous_position_radius = closest_distance;
-            //             }
-            //         }
+                    // if using enhanced sphere tracing
+                    if (sphere_tracing && enhanced)
+                    {
+                        // determine if previous step circle overlaps current step circle
+                        circles_overlap = (glm::length(current_position - previous_position) - closest_distance - previous_position_radius) <= 0;
 
-            //         // take step along ray of size closest distance
-            //         // if not using sphere tracing, use fixed step size ray marching approach
-            //         // if enhanced flag set in addition to using sphere tracing, use relaxation factor
-            //         current_position += direction * (sphere_tracing ? closest_distance : step_size) * (sphere_tracing && enhanced ? relaxation_factor : 1.0f);
-            //     }
-            // });
+                        // if not overlapping, jump back to previous position and revert to classical sphere tracing (relaxation_factor = 1)
+                        if (!circles_overlap)
+                        {
+                            current_position = previous_position;
+                            relaxation_factor = 1.0f;
+                        }
+                        // update relevant variables if overlapping
+                        else
+                        {
+                            previous_position = current_position;
+                            previous_position_radius = closest_distance;
+                        }
+                    }
+
+                    // take step along ray of size closest distance
+                    // if not using sphere tracing, use fixed step size ray marching approach
+                    // if enhanced flag set in addition to using sphere tracing, use relaxation factor
+                    current_position += direction * (sphere_tracing ? closest_distance : step_size) * (sphere_tracing && enhanced ? relaxation_factor : 1.0f);
+                }
+            
+            });
         });
     }
     catch (const exception& e)
