@@ -3,6 +3,26 @@
 
 
 // CODE
+void update_circle (int index, vec2 position, float radius)
+{
+    // determine circle shape id
+    string circle_id = "circle-" + to_string(index);
+
+    // delete old circle (interface library object)
+    _SHAPE old_circle = get_shape(circle_id);
+    get_shapes()->erase(circle_id);
+
+    // replace old circle with new circle
+    get_component("circles").replace(index, 
+        &shape(circle_id).x(position.x).y(position.y).radius(radius).thickness(0.025).build()
+    );
+
+    // delete old circle (graphics engine object)
+    old_circle.delete_shape(false);
+}
+
+
+// MAIN
 int main() {
 
     try 
@@ -23,21 +43,30 @@ int main() {
             ).position({-1.0, -4.0});
 
             // create moon shape to showcase subtraction / difference operation
-            component("moon").add(
-                &shape("moon").radius(1.5f).red(253).green(255).blue(214).subtract(
-                    &shape("moon_stencil").radius(1.25f).x(0.35f).build()
-                ).build()
-            ).position({-3.0, 2.0});
+            // component("moon").add(
+            //     &shape("moon").radius(1.5f).red(253).green(255).blue(214).subtract(
+            //         &shape("moon_stencil").radius(1.25f).x(0.35f).build()
+            //     ).build()
+            // ).position({-3.0, 2.0});
 
             // create vector of components to iterate over
             static vector<string> shape_ids = {
                 "pink_circle",
                 "blue_rounded_square",
-                "moon"
+                // "moon"
             };
 
             // draw line
             line("ray").from({-12.0, 0.0}).to({12.0, 0.0}).thickness(0.05f).radius(0.01f).draw();
+
+            // create component to contain shapes for each circle
+            component("circles");
+            for (int i = 0; i < 64; i++)
+            {
+                get_component("circles").add(
+                    &shape("circle-" + to_string(i)).build()
+                );
+            }
 
             // update line to follow cursor
             on_mouse_move([](vec2 position) {
@@ -54,7 +83,7 @@ int main() {
                 // initialise variables
                 vec2 current_position = ray_origin;
                 float distance;
-                float closest_distance = 1000000.0;
+                float closest_distance = 100.0;
 
                 // initialise flags
                 // !sphere_tracing = fixed step ray marching
@@ -76,10 +105,19 @@ int main() {
                 for (int i = 0; i < 64; i++)
                 {
                     // terminate if closest distance below termination threshold 0.001
-                    if (closest_distance < 0.001f) return;
+                    // terminate if closest distance is to large
+                    if (closest_distance < 0.001f || i > 0 && closest_distance > 11.0)
+                    {
+                        // replace remaining circles that did not get redrawn with "null" circles
+                        for (int j = i; j < 64; j++)
+                        {
+                            update_circle(j, {0.0, 0.0}, 0.0);
+                        }
+                        return;
+                    }
 
                     // reset closest distance to some large distance outside of screen space
-                    closest_distance = 1000000.0;
+                    closest_distance = 100.0;
 
                     // determine closest signed distance to scene
                     // in this case, simply iterate over shapes
@@ -91,6 +129,9 @@ int main() {
                         // if smaller than current smallest distance, store new smallest distance
                         closest_distance = distance < closest_distance ? distance : closest_distance;
                     }
+
+                    // update circle for step
+                    update_circle(i, current_position, closest_distance);
 
                     // if closest distance is negative = inside a shape AND we are using fixed step size ray marching
                     // halve step size
