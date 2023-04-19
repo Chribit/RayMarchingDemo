@@ -72,6 +72,18 @@ void update_circle (int index, vec2 position, float radius)
     old_circle.delete_shape(false);
 }
 
+void set_info_text_position ()
+{
+    int width, height;
+    glfwGetWindowSize(get_window(), &width, &height);
+    float screen_space_unit = height / 2.0f;
+
+    float x = -1.0 * (((width / screen_space_unit) / 2.0) / 0.125) + 0.5;
+    float y = -1.0 * (1.0 / 0.125) + 3.0;
+
+    get_component("info").position({x, y});
+}
+
 
 // MAIN
 int main() {
@@ -86,12 +98,12 @@ int main() {
             // create pink circle shape to showcase basic shape
             component("pink_circle").add(
                 &shape("pink_circle").radius(1.5f).red(249).green(9).blue(145).build()
-            ).position({-1.0, 7.0});
+            ).position({1.0, 7.0});
 
             // create blue rounded square shape to showcase rounding
             component("blue_rounded_rectangle").add(
                 &shape("blue_rounded_square").width(3.0f).height(2.0f).round(0.4f).red(9).green(221).blue(249).build()
-            ).position({-7.0, -6.0});
+            ).position({7.0, -6.0});
 
             // create yellow rotated square shape to showcase what happens at angles
             component("yellow_rectangle").add(
@@ -101,7 +113,7 @@ int main() {
             // create pink slab to showcase overstepping along a ray
             component("pink_slab").add(
                 &shape("pink_slab").width(0.75f).height(5.0f).red(240).green(10).blue(252).build()
-            ).position({5.0, 4.0}).rotation(10.0f);
+            ).position({-5.0, 4.0}).rotation(10.0f);
 
             // create moon shape to showcase subtraction / difference operation
             // component("moon").add(
@@ -120,7 +132,7 @@ int main() {
             };
 
             // draw line
-            line("ray").from({-12.0, 0.0}).to({12.0, 0.0}).thickness(0.05f).radius(0.01f).draw();
+            line("ray").from({12.0, 0.0}).to({-12.0, 0.0}).thickness(0.05f).radius(0.01f).draw();
 
             // create component to contain shapes for each circle
             component("circles");
@@ -157,6 +169,20 @@ int main() {
                     sphere = false;
                     enhanced = true;
                 }
+            });
+
+            // insert info text regarding hot keys
+            initialise_font({255, 255, 255, 255});
+            text(
+                "info",
+                u"Hot Keys\n1 = Naive Ray Marching\n2 = Sphere Tracing\n3 = Enhanced Sphere Tracing\n    > 1.5 relaxation factor",
+                {255, 255, 255, 255}
+            ).scale(0.5f);
+            set_info_text_position();
+
+            // make text stick to bottom left corner
+            get_root().listen("window resize", [](event* data) {
+                set_info_text_position();
             });
 
             // update line to follow cursor
