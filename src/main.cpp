@@ -167,7 +167,7 @@ int main() {
             initialise_font({255, 255, 255, 255});
             text(
                 "info",
-                u"Hot Keys\n1 = Naive Ray Marching\n2 = Sphere Tracing\n3 = Enhanced Sphere Tracing\n    > 1.5 relaxation factor",
+                u"Hot Keys\n1 = Naive Ray Marching\n2 = Sphere Tracing\n3 = Enhanced Sphere Tracing\n    1.5 relaxation factor",
                 {255, 255, 255, 255}
             ).scale(0.5f);
             set_info_text_position();
